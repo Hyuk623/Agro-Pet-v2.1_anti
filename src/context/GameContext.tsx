@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import type { GameState, CropState, PlayerState, Environment, DailyActions, Checkpoint } from '../types/game';
+import type { GameState, CropState, PlayerState, Environment, DailyActions, Checkpoint, ItemType } from '../types/game';
 import { strawberryPack } from '../data/strawberryPack';
 import { generateEnvironment } from '../data/environmentGen';
 
@@ -8,17 +8,23 @@ interface GameContextProps {
   startGame: (cropName: string) => void;
   updateAction: (key: keyof DailyActions, value: any) => void;
   runDay: () => void;
-  useItem: (itemType: 'nutrients' | 'coldProtectors') => void;
+  useItem: (itemType: ItemType) => void;
   recoverFromCheckpoint: () => void;
   completeMinigame: (success: boolean) => void;
   closeFeedback: () => void;
   setCurrentPage: (page: 'farm' | 'shop' | 'arcade') => void;
-  buyItem: (itemType: 'nutrients' | 'coldProtectors', price: number) => void;
+  buyItem: (itemType: ItemType, price: number) => void;
 }
 
 const initialPlayer: PlayerState = {
-  tokens: 2,
-  inventory: { nutrients: 1, coldProtectors: 1 },
+  tokens: 5, // Initial tokens for easier testing
+  inventory: { 
+    nutrients: 1, 
+    coldProtectors: 1,
+    fertilizer: 0,
+    pesticide: 0,
+    booster: 0
+  },
   activeBuffs: { coldProtectionDays: 0 }
 };
 
@@ -70,29 +76,60 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     setState(prev => ({ ...prev, actions: { ...prev.actions, [key]: value } }));
   };
 
-  const useItem = (itemType: 'nutrients' | 'coldProtectors') => {
+  const useItem = (itemType: ItemType) => {
     setState(prev => {
       const p = prev.player;
       if (p.inventory[itemType] <= 0) return prev;
       
       const newInventory = { ...p.inventory, [itemType]: p.inventory[itemType] - 1 };
-      
-      if (itemType === 'nutrients') {
-        return {
-          ...prev,
-          player: { ...p, inventory: newInventory },
-          crop: { ...prev.crop, stamina: Math.min(100, prev.crop.stamina + 30), growthProgress: prev.crop.growthProgress + 10 }
-        };
-      } else {
-        return {
-          ...prev,
-          player: { ...p, inventory: newInventory, activeBuffs: { ...p.activeBuffs, coldProtectionDays: 1 } }
-        };
+      let cropAdjustments: Partial<CropState> = {};
+      let buffAdjustments: Partial<GameState['player']['activeBuffs']> = {};
+
+      switch (itemType) {
+        case 'nutrients':
+          cropAdjustments = { 
+            stamina: Math.min(100, prev.crop.stamina + 20), 
+            growthProgress: prev.crop.growthProgress + 5 
+          };
+          break;
+        case 'coldProtectors':
+          buffAdjustments = { coldProtectionDays: 1 };
+          break;
+        case 'fertilizer':
+          // High growth, slight stress
+          cropAdjustments = { 
+            growthProgress: prev.crop.growthProgress + 20, 
+            stress: Math.min(100, prev.crop.stress + 5) 
+          };
+          break;
+        case 'pesticide':
+          // Direct disease risk reduction
+          cropAdjustments = { 
+            diseaseRisk: Math.max(0, prev.crop.diseaseRisk - 30) 
+          };
+          break;
+        case 'booster':
+          // Major growth boost
+          cropAdjustments = { 
+            growthProgress: prev.crop.growthProgress + 35,
+            stamina: Math.max(0, prev.crop.stamina - 10)
+          };
+          break;
       }
+      
+      return {
+        ...prev,
+        player: { 
+          ...p, 
+          inventory: newInventory, 
+          activeBuffs: { ...p.activeBuffs, ...buffAdjustments } 
+        },
+        crop: { ...prev.crop, ...cropAdjustments }
+      };
     });
   };
 
-  const buyItem = (itemType: 'nutrients' | 'coldProtectors', price: number) => {
+  const buyItem = (itemType: ItemType, price: number) => {
     setState(prev => {
       if (prev.player.tokens < price) return prev;
       return {
@@ -113,46 +150,46 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     setState(prev => {
       // 1. Snapshot for checkpoint (Safe Day)
       let checkpoints = [...prev.checkpoints];
-      if (prev.crop.stress < 50 && prev.crop.diseaseRisk < 50 && prev.crop.stamina > 40) {
+      if (prev.crop.stress < 40 && prev.crop.diseaseRisk < 40 && prev.crop.stamina > 50) {
         checkpoints = [{
           day: prev.crop.day,
           cropState: JSON.parse(JSON.stringify(prev.crop)),
           playerState: JSON.parse(JSON.stringify(prev.player)),
           reason: 'major_danger'
-        }]; // Keep just the latest safe one to save memory
+        }];
       }
 
       // 2. Evaluate Day
       let envToEvaluate = prev.environment;
-      // Item buff intercept
       if (prev.player.activeBuffs.coldProtectionDays > 0) {
-         if (envToEvaluate.temperature < 10) envToEvaluate = { ...envToEvaluate, temperature: 15 };
+         if (envToEvaluate.temperature < 10) envToEvaluate = { ...envToEvaluate, temperature: 18 };
       }
 
       const result = strawberryPack.evaluateDay(envToEvaluate, prev.actions, prev.crop);
       
-      // Stop if dead
       if (result.isDead) {
         return { ...prev, checkpoints, deathReason: result.deathDetails || null };
       }
 
       // 3. Process Stage Progression
       let newStage = prev.crop.stage;
-      let visualState = result.stateChanges.stress! > 60 ? 'stressed' : result.stateChanges.diseaseRisk! > 60 ? 'risky' : 'healthy';
-      
-      let growthP = result.stateChanges.growthProgress || 0;
+      let growthP = (prev.crop.growthProgress + (result.stateChanges.growthProgress || 0));
       let tokensGained = 0;
       
       const reqs = strawberryPack.stages[newStage as keyof typeof strawberryPack.stages];
       if (reqs && growthP >= reqs.growthThreshold) {
-        // Level UP
         growthP = 0;
-        tokensGained += 2;
+        tokensGained += 5; // Bonus tokens for stage up
         if (newStage === 'sprout') newStage = 'growth';
         else if (newStage === 'growth') newStage = 'flower';
         else if (newStage === 'flower') newStage = 'fruit';
       }
 
+      const newStats = { ...result.stateChanges };
+      let visualState: any = 'healthy';
+      if (newStats.stress! > 60) visualState = 'stressed';
+      else if (newStats.diseaseRisk! > 60) visualState = 'risky';
+      
       if (newStage === 'flower') visualState = 'flowering';
       if (newStage === 'fruit') visualState = 'fruiting';
 
@@ -160,26 +197,26 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       const newActiveBuffs = { ...prev.player.activeBuffs };
       if (newActiveBuffs.coldProtectionDays > 0) newActiveBuffs.coldProtectionDays--;
 
-      // Render minigame every 3 days approx.
-      const isMinigameDay = (prev.crop.day + 1) % 4 === 0;
-
       return {
         ...prev,
         checkpoints,
-        minigameActive: isMinigameDay,
-        minigameTokensEarnedToday: 0, // Reset daily tokens
-        currentPage: 'farm', // Return to farm if they were elsewhere? Or stay? Let's stay.
+        minigameActive: false,
+        minigameTokensEarnedToday: 0,
         environment: generateEnvironment(prev.crop.day + 1),
-        player: { ...prev.player, tokens: prev.player.tokens + tokensGained, activeBuffs: newActiveBuffs },
+        player: { 
+          ...prev.player, 
+          tokens: prev.player.tokens + tokensGained + 1, // Regular 1 token for surviving a day
+          activeBuffs: newActiveBuffs 
+        },
         crop: {
           ...prev.crop,
           ...result.stateChanges,
           day: prev.crop.day + 1,
           growthProgress: growthP,
           stage: newStage,
-          visualState: visualState as any
+          visualState
         },
-        dayFeedback: { ...result.feedback, tokensGained }
+        dayFeedback: { ...result.feedback, tokensGained: tokensGained + 1 }
       };
     });
   };
@@ -192,7 +229,7 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
         ...prev,
         deathReason: null,
         crop: cp.cropState,
-        player: { ...cp.playerState, tokens: prev.player.tokens - 2 }, // Apply directly since state is overridden
+        player: { ...cp.playerState, tokens: prev.player.tokens - 2 },
         environment: generateEnvironment(cp.cropState.day)
       };
     });
@@ -211,8 +248,8 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
         dayFeedback: { 
           title: "Mini-game Result", 
           desc: success 
-            ? (canEarn ? "Great! You answered correctly and earned a token." : "Correct! But you've already earned the maximum tokens for today.") 
-            : "Oops! Let's review agricultural knowledge.", 
+            ? (canEarn ? "Success! You earned a token." : "Correct! (Daily limit reached)") 
+            : "Keep learning!", 
           isWarning: !success, 
           tokensGained: tokensToAdd 
         }

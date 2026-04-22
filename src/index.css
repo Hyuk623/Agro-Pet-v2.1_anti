@@ -3,8 +3,8 @@
   --primary: #FF4B72; /* Strawberry pink/red */
   --primary-light: #FF85A1;
   --secondary: #4CAF50; /* Green */
-  --bg-color: #Fdfbf7;
-  --panel-bg: rgba(255, 255, 255, 0.85);
+  --bg-color: #FDFBF7;
+  --panel-bg: rgba(255, 255, 255, 0.9);
   --text-main: #2D3748;
   --text-muted: #718096;
   
@@ -32,6 +32,7 @@ body {
   color: var(--text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 input, button {
@@ -44,22 +45,25 @@ input, button {
   margin: 0 auto;
   min-height: 100vh;
   position: relative;
-  background: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 40px rgba(0,0,0,0.05);
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 0 50px rgba(0,0,0,0.04);
   display: flex;
   flex-direction: column;
+  padding-bottom: 100px; /* Space for Nav */
 }
 
 /* Glassmorphism Panels */
 .glass-panel {
   background: var(--panel-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
-  border-radius: 16px;
+  border-radius: 20px;
   box-shadow: var(--glass-shadow);
-  padding: 16px;
+  padding: 20px;
   margin-bottom: 16px;
+  transition: transform 0.2s ease;
 }
 
 /* Buttons */
@@ -68,70 +72,51 @@ input, button {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 16px;
-  border-radius: 12px;
+  padding: 12px 20px;
+  border-radius: 14px;
   border: none;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 0.95rem;
 }
 
 .btn:active {
-  transform: scale(0.96);
+  transform: scale(0.95);
 }
 
 .btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  filter: grayscale(1);
 }
 
 .btn-primary {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), #FF6B8B);
   color: white;
-  box-shadow: 0 4px 12px rgba(255, 75, 114, 0.3);
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #e63e62;
+  box-shadow: 0 6px 15px rgba(255, 75, 114, 0.25);
 }
 
 .btn-secondary {
-  background: var(--secondary);
+  background: linear-gradient(135deg, var(--secondary), #66BB6A);
   color: white;
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
 .btn-outline {
-  background: transparent;
-  border: 2px solid var(--primary);
+  background: white;
+  border: 1.5px solid #E2E8F0;
+  color: var(--text-main);
+}
+
+.btn-outline.active {
+  background: #F7FAFC;
+  border-color: var(--primary);
   color: var(--primary);
 }
 
-/* Forms */
-.input-field {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 2px solid #e2e8f0;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-  outline: none;
-}
-
-.input-field:focus {
-  border-color: var(--primary-light);
-}
-
 /* Utilities */
-.app-container {
-  max-width: 480px;
-  margin: 0 auto;
-  min-height: 100vh;
-  padding-bottom: 90px;
-}
-
-.flex-col { display: flex; flexDirection: column; }
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
 .items-center { align-items: center; }
 .justify-center { justify-content: center; }
 .justify-between { justify-content: space-between; }
@@ -144,22 +129,26 @@ input, button {
 .mb-2 { margin-bottom: 8px; }
 .mb-4 { margin-bottom: 16px; }
 .mb-6 { margin-bottom: 24px; }
+.mt-2 { margin-top: 8px; }
 .mt-4 { margin-top: 16px; }
 .mt-6 { margin-top: 24px; }
 .p-4 { padding: 16px; }
 .text-center { text-align: center; }
+.text-xs { font-size: 0.75rem; }
+.text-sm { font-size: 0.875rem; }
+.text-muted { color: var(--text-muted); }
+.font-bold { font-weight: 700; }
 .mx-auto { margin-left: auto; margin-right: auto; }
 
 /* Badges & Chips */
 .chip {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 20px;
   font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 .chip.status-excellent { background: #E6FFFA; color: #319795; }
 .chip.status-good { background: #F0FFF4; color: #38A169; }
@@ -170,41 +159,29 @@ input, button {
 .modal-overlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(45, 55, 72, 0.4);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  z-index: 100;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #CBD5E0;
-  border-radius: 10px;
+  padding: 24px;
+  z-index: 1500; /* Above BottomNav */
 }
 
 /* Animations */
 @keyframes popIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 .animate-pop {
-  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 @keyframes float {
   0% { transform: translateY(0px) }
-  50% { transform: translateY(-5px) }
+  50% { transform: translateY(-8px) }
   100% { transform: translateY(0px) }
 }
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: float 4s ease-in-out infinite;
 }

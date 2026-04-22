@@ -36,11 +36,16 @@ export interface Environment {
   };
 }
 
+export type ItemType = 'nutrients' | 'coldProtectors' | 'fertilizer' | 'pesticide' | 'booster';
+
 export interface PlayerState {
   tokens: number;
   inventory: {
     nutrients: number;
     coldProtectors: number;
+    fertilizer: number;    // NEW
+    pesticide: number;     // NEW
+    booster: number;       // NEW
   };
   activeBuffs: {
     coldProtectionDays: number;
