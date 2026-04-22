@@ -1,7 +1,7 @@
 import React from 'react';
 import { useGame } from '../context/GameContext';
 import { ShoppingBag, Beaker, Shield, Coins, Check, Flower2, Bug, Zap } from 'lucide-react';
-import { ItemType } from '../types/game';
+import type { ItemType } from '../types/game';
 
 export const ShopScreen: React.FC = () => {
   const { state, buyItem } = useGame();

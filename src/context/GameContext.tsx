@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { GameState, CropState, PlayerState, Environment, DailyActions, Checkpoint, ItemType } from '../types/game';
 import { strawberryPack } from '../data/strawberryPack';
 import { generateEnvironment } from '../data/environmentGen';
