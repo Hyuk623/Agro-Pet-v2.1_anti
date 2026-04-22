@@ -139,6 +139,7 @@ input, button {
 .text-muted { color: var(--text-muted); }
 .font-bold { font-weight: 700; }
 .mx-auto { margin-left: auto; margin-right: auto; }
+.relative { position: relative; }
 
 /* Badges & Chips */
 .chip {
