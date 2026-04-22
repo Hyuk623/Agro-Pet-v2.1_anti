@@ -6,15 +6,11 @@ export interface CropState {
   day: number;
   stage: GrowthStage;
   visualState: VisualState;
-  
-  // Core stats (0-100)
   waterLevel: number;
   lightLevel: number;
   stamina: number;
   stress: number;
   diseaseRisk: number;
-  
-  // Growth progress for current stage (0-100)
   growthProgress: number;
 }
 
@@ -29,9 +25,9 @@ export interface DailyActions {
 }
 
 export interface Environment {
-  temperature: number; // Celsius
+  temperature: number;
   sunlight: 'sunny' | 'cloudy' | 'rainy';
-  diseasePressure: number; // 0-100 external pressure
+  diseasePressure: number;
   specialEvent?: {
     id: string;
     title: string;
@@ -43,8 +39,8 @@ export interface Environment {
 export interface PlayerState {
   tokens: number;
   inventory: {
-    nutrients: number; // +Stamina, +Growth
-    coldProtectors: number; // Ignores cold stress for a day
+    nutrients: number;
+    coldProtectors: number;
   };
   activeBuffs: {
     coldProtectionDays: number;
@@ -60,6 +56,7 @@ export interface Checkpoint {
 
 export interface GameState {
   hasStarted: boolean;
+  currentPage: 'farm' | 'shop' | 'arcade';
   crop: CropState;
   player: PlayerState;
   environment: Environment;
@@ -68,9 +65,10 @@ export interface GameState {
   deathReason: { main: string; secondary: string; lesson: string; actions: string } | null;
   dayFeedback: { title: string; desc: string; isWarning: boolean; tokensGained?: number } | null;
   minigameActive: boolean;
+  minigameTokensEarnedToday: number;
+  maxDailyMinigameTokens: number;
 }
 
-// Crop Pack Architecture (Standardized Data for Future Expansion)
 export interface StageRequirement {
   daysNeeded: number;
   growthThreshold: number;
@@ -102,7 +100,6 @@ export interface CropPack {
     maxDisease: number;
     minStamina: number;
   };
-  // How daily actions affect the crop based on generic environment
   evaluateDay: (env: Environment, actions: DailyActions, crop: CropState) => {
     stateChanges: Partial<CropState>;
     feedback: { title: string; desc: string; isWarning: boolean };

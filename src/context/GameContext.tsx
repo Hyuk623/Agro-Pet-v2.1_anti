@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { GameState, CropState, PlayerState, Environment, DailyActions, Checkpoint } from '../types/game';
+import type { GameState, CropState, PlayerState, Environment, DailyActions, Checkpoint } from '../types/game';
 import { strawberryPack } from '../data/strawberryPack';
 import { generateEnvironment } from '../data/environmentGen';
 
@@ -12,6 +12,8 @@ interface GameContextProps {
   recoverFromCheckpoint: () => void;
   completeMinigame: (success: boolean) => void;
   closeFeedback: () => void;
+  setCurrentPage: (page: 'farm' | 'shop' | 'arcade') => void;
+  buyItem: (itemType: 'nutrients' | 'coldProtectors', price: number) => void;
 }
 
 const initialPlayer: PlayerState = {
@@ -38,6 +40,7 @@ export const GameContext = createContext<GameContextProps | undefined>(undefined
 export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [state, setState] = useState<GameState>({
     hasStarted: false,
+    currentPage: 'farm',
     crop: initialCrop(''),
     player: initialPlayer,
     environment: generateEnvironment(1),
@@ -45,7 +48,9 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     checkpoints: [],
     deathReason: null,
     dayFeedback: null,
-    minigameActive: false
+    minigameActive: false,
+    minigameTokensEarnedToday: 0,
+    maxDailyMinigameTokens: 3
   });
 
   const startGame = (name: string) => {
@@ -55,6 +60,10 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       crop: initialCrop(name),
       environment: generateEnvironment(1)
     }));
+  };
+
+  const setCurrentPage = (page: 'farm' | 'shop' | 'arcade') => {
+    setState(prev => ({ ...prev, currentPage: page }));
   };
 
   const updateAction = (key: keyof DailyActions, value: any) => {
@@ -80,6 +89,23 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
           player: { ...p, inventory: newInventory, activeBuffs: { ...p.activeBuffs, coldProtectionDays: 1 } }
         };
       }
+    });
+  };
+
+  const buyItem = (itemType: 'nutrients' | 'coldProtectors', price: number) => {
+    setState(prev => {
+      if (prev.player.tokens < price) return prev;
+      return {
+        ...prev,
+        player: {
+          ...prev.player,
+          tokens: prev.player.tokens - price,
+          inventory: {
+            ...prev.player.inventory,
+            [itemType]: prev.player.inventory[itemType] + 1
+          }
+        }
+      };
     });
   };
 
@@ -141,6 +167,8 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
         ...prev,
         checkpoints,
         minigameActive: isMinigameDay,
+        minigameTokensEarnedToday: 0, // Reset daily tokens
+        currentPage: 'farm', // Return to farm if they were elsewhere? Or stay? Let's stay.
         environment: generateEnvironment(prev.crop.day + 1),
         player: { ...prev.player, tokens: prev.player.tokens + tokensGained, activeBuffs: newActiveBuffs },
         crop: {
@@ -171,12 +199,25 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   };
 
   const completeMinigame = (success: boolean) => {
-    setState(prev => ({
-      ...prev,
-      minigameActive: false,
-      player: { ...prev.player, tokens: success ? prev.player.tokens + 1 : prev.player.tokens },
-      dayFeedback: { title: "Mini-game Result", desc: success ? "Great! You answered correctly and earned a token." : "Oops! Let's review agricultural knowledge.", isWarning: !success, tokensGained: success ? 1 : 0 }
-    }));
+    setState(prev => {
+      const canEarn = prev.minigameTokensEarnedToday < prev.maxDailyMinigameTokens;
+      const tokensToAdd = (success && canEarn) ? 1 : 0;
+      
+      return {
+        ...prev,
+        minigameActive: false,
+        minigameTokensEarnedToday: prev.minigameTokensEarnedToday + tokensToAdd,
+        player: { ...prev.player, tokens: prev.player.tokens + tokensToAdd },
+        dayFeedback: { 
+          title: "Mini-game Result", 
+          desc: success 
+            ? (canEarn ? "Great! You answered correctly and earned a token." : "Correct! But you've already earned the maximum tokens for today.") 
+            : "Oops! Let's review agricultural knowledge.", 
+          isWarning: !success, 
+          tokensGained: tokensToAdd 
+        }
+      };
+    });
   };
 
   const closeFeedback = () => {
@@ -184,7 +225,7 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   };
 
   return (
-    <GameContext.Provider value={{ state, startGame, updateAction, runDay, useItem, recoverFromCheckpoint, completeMinigame, closeFeedback }}>
+    <GameContext.Provider value={{ state, startGame, updateAction, runDay, useItem, recoverFromCheckpoint, completeMinigame, closeFeedback, setCurrentPage, buyItem }}>
       {children}
     </GameContext.Provider>
   );

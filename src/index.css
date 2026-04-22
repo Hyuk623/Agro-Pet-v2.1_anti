@@ -124,18 +124,31 @@ input, button {
 }
 
 /* Utilities */
-.text-center { text-align: center; }
-.flex { display: flex; }
-.flex-col { display: flex; flex-direction: column; }
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding-bottom: 90px;
+}
+
+.flex-col { display: flex; flexDirection: column; }
 .items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
 .justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-1 { gap: 4px; }
 .gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
 .gap-4 { gap: 16px; }
-.p-4 { padding: 16px; }
-.mb-4 { margin-bottom: 16px; }
-.mt-4 { margin-top: 16px; }
 .w-full { width: 100%; }
+.m-0 { margin: 0; }
+.mb-2 { margin-bottom: 8px; }
+.mb-4 { margin-bottom: 16px; }
+.mb-6 { margin-bottom: 24px; }
+.mt-4 { margin-top: 16px; }
+.mt-6 { margin-top: 24px; }
+.p-4 { padding: 16px; }
+.text-center { text-align: center; }
+.mx-auto { margin-left: auto; margin-right: auto; }
 
 /* Badges & Chips */
 .chip {

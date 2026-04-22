@@ -6,6 +6,9 @@ import { StatusPanel } from './components/StatusPanel';
 import { ActionControls } from './components/ActionControls';
 import { DeathModal, FeedbackModal, MinigameModal } from './components/GameModals';
 import { Coins } from 'lucide-react';
+import { BottomNav } from './components/BottomNav';
+import { ShopScreen } from './components/ShopScreen';
+import { ArcadeScreen } from './components/ArcadeScreen';
 
 const SetupScreen: React.FC = () => {
   const { startGame } = useGame();
@@ -42,12 +45,24 @@ const SetupScreen: React.FC = () => {
   );
 };
 
+const FarmScreen: React.FC = () => {
+  return (
+    <div className="animate-pop" style={{ marginBottom: 80 }}>
+      <EnvironmentBoard />
+      <CropVisual />
+      <StatusPanel />
+      <ActionControls />
+    </div>
+  );
+};
+
 const MainGameScreen: React.FC = () => {
   const { state } = useGame();
+  const { currentPage } = state;
 
   return (
     <div className="app-container p-4">
-      {/* Top Bar */}
+      {/* Top Bar - Common to all play screens */}
       <div className="flex justify-between items-center mb-4">
          <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--primary)' }}>Agro Buddy</div>
          <div className="chip" style={{ background: '#FEFCBF', color: '#D69E2E', border: '1px solid #D69E2E', display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -55,11 +70,14 @@ const MainGameScreen: React.FC = () => {
          </div>
       </div>
 
-      <EnvironmentBoard />
-      <CropVisual />
-      <StatusPanel />
-      <ActionControls />
+      {/* Conditional Rendering based on current page */}
+      {currentPage === 'farm' && <FarmScreen />}
+      {currentPage === 'shop' && <ShopScreen />}
+      {currentPage === 'arcade' && <ArcadeScreen />}
 
+      <BottomNav />
+
+      {/* Global Modals */}
       <FeedbackModal />
       <DeathModal />
       <MinigameModal />

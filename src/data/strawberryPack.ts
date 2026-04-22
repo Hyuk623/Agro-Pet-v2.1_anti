@@ -1,4 +1,4 @@
-import { CropPack, CropState, DailyActions, Environment } from '../types/game';
+import type { CropPack, CropState, DailyActions, Environment } from '../types/game';
 
 export const strawberryPack: CropPack = {
   id: 'strawberry',
