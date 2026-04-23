@@ -1,4 +1,4 @@
-import { CropState, CropVisualCondition } from '../types/game';
+import type { CropState, CropVisualCondition } from '../types/game';
 
 /**
  * Resolves a short, playful reaction string based on the crop's state and condition.

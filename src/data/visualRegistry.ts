@@ -1,4 +1,4 @@
-import { VisualRegistryEntry } from '../types/game';
+import type { VisualRegistryEntry } from '../types/game';
 
 export const cropVisualRegistry: Record<string, VisualRegistryEntry> = {
   strawberry: {

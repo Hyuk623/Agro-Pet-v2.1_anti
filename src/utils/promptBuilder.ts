@@ -1,4 +1,4 @@
-import { CropPromptTemplate, CropVisualStage, CropVisualCondition } from '../types/game';
+import type { CropPromptTemplate, CropVisualStage, CropVisualCondition } from '../types/game';
 import { strawberryPrompt } from '../data/cropPrompts/strawberryPrompt';
 import { tomatoPrompt } from '../data/cropPrompts/tomatoPrompt';
 

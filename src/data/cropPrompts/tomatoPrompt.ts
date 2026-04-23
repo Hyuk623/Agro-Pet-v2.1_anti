@@ -1,4 +1,4 @@
-import { CropPromptTemplate } from '../../types/game';
+import type { CropPromptTemplate } from '../../types/game';
 
 export const tomatoPrompt: CropPromptTemplate = {
   cropName: "Tomato",

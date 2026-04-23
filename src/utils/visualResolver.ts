@@ -1,4 +1,4 @@
-import { CropState, CropVisualCondition } from '../types/game';
+import type { CropState, CropVisualCondition } from '../types/game';
 
 /**
  * Heuristic function to determine the current visual "vibe" or condition 
