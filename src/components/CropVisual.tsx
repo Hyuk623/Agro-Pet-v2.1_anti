@@ -1,57 +1,104 @@
 import React from 'react';
 import { useGame } from '../context/GameContext';
+import { resolveCropVisual, cropVisualRegistry } from '../data/visualRegistry';
+import { determineVisualCondition, getConditionFeedback } from '../utils/visualResolver';
 
 export const CropVisual: React.FC = () => {
   const { state } = useGame();
   const { crop } = state;
 
-  // Simple visual rendering logic based on stage and visual state
-  const getRenderDetails = () => {
-    switch (crop.stage) {
-      case 'sprout': return { emoji: '🌱', size: '3rem', boxH: 120 };
-      case 'growth': return { emoji: '🌿', size: '5rem', boxH: 160 };
-      case 'flower': return { emoji: '🌸', size: '6rem', boxH: 180 };
-      case 'fruit': return { emoji: '🍓', size: '6rem', boxH: 180 };
-      case 'dead': return { emoji: '🥀', size: '5rem', boxH: 160 };
-      default: return { emoji: '🌱', size: '3rem', boxH: 130 };
-    }
-  };
-
-  const getStatusColor = () => {
-    if (crop.visualState === 'stressed') return 'var(--warning)';
-    if (crop.visualState === 'risky') return 'var(--danger)';
-    return 'var(--success)';
-  };
-
-  const render = getRenderDetails();
+  // 1. Resolve visual condition from technical stats
+  const condition = determineVisualCondition(crop);
+  
+  // 2. Resolve visual asset and feedback meta
+  const assetPath = resolveCropVisual(crop.id, crop.stage, condition);
+  const feedback = getConditionFeedback(condition);
+  const characterProfile = cropVisualRegistry[crop.id]?.profile;
 
   return (
-    <div className="glass-panel text-center animate-pop" style={{ position: 'relative' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div>
-           <h2 style={{ fontSize: '1.4rem', color: 'var(--primary)', margin: 0 }}>{crop.name}</h2>
-           <span className="chip mt-2" style={{ background: 'var(--bg-color)' }}>Day {crop.day}</span>
+    <div className="glass-panel text-center animate-pop" style={{ position: 'relative', overflow: 'hidden' }}>
+      {/* Character Personality & Status Badge */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 16 }}>
+        <div style={{ textAlign: 'left' }}>
+           <h2 style={{ fontSize: '1.4rem', color: 'var(--primary)', margin: 0 }}>{crop.name || characterProfile?.displayName}</h2>
+           <div className="flex gap-1 mt-1">
+              {characterProfile?.personalityKeywords.slice(0, 2).map(k => (
+                <span key={k} style={{ fontSize: '0.65rem', color: 'var(--text-muted)', border: '1px solid #E2E8F0', padding: '1px 6px', borderRadius: '4px' }}>
+                  {k}
+                </span>
+              ))}
+           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-           <span className="chip" style={{ background: getStatusColor(), color: '#fff' }}>{crop.visualState.toUpperCase()}</span>
-           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>Stage: {crop.stage.toUpperCase()}</div>
+           <span className={`chip status-badge ${feedback.effect}`} style={{ background: feedback.color, color: '#fff', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+             {feedback.badge}
+           </span>
+           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>Day {crop.day} • {crop.stage.toUpperCase()}</div>
         </div>
       </div>
 
-      <div className="animate-float" style={{ 
-          height: render.boxH, 
+      {/* Visual Display Area */}
+      <div className={`${feedback.animation} ${feedback.effect} sparkle-container`} style={{ 
+          height: 180, 
           display: 'flex', 
-          alignItems: 'end', 
-          justifyContent: 'center',
+          flexDirection: 'column',
+          alignItems: 'center', 
+          justifyContent: 'end',
           borderBottom: '4px solid #8B4513',
-          margin: '20px 40px',
-          paddingBottom: 10
+          margin: '10px 20px',
+          paddingBottom: 10,
+          background: 'radial-gradient(circle at bottom, rgba(76, 175, 80, 0.05) 0%, transparent 70%)',
+          position: 'relative'
       }}>
-        <div style={{ fontSize: render.size, lineHeight: 1, filter: crop.visualState === 'dead' ? 'grayscale(100%)' : 'none' }}>
-           {render.emoji}
+        {/* Recovery Sparkle Placeholder if condition is recovering */}
+        {condition === 'recovering' && (
+          <div className="sparkle" style={{ position: 'absolute', top: '20%', right: '20%' }}></div>
+        )}
+
+        {/* Actual Character Image */}
+        <img 
+          src={assetPath} 
+          alt={`${crop.id} ${condition}`}
+          style={{ 
+            maxHeight: '130px', 
+            maxWidth: '130px', 
+            objectFit: 'contain', 
+            transition: 'all 0.5s ease-in-out'
+          }}
+          onError={(e) => {
+            (e.target as any).style.display = 'none';
+            (e.target as any).nextSibling.style.display = 'block';
+          }}
+        />
+        {/* Placeholder Emoji (Visible only on error) */}
+        <div style={{ display: 'none', fontSize: '5rem', lineHeight: 1 }}>
+           {crop.stage === 'fruit' ? '🍓' : '🌱'}
         </div>
+
+        {/* Shadow */}
+        <div style={{ 
+          width: '60px', 
+          height: '6px', 
+          background: 'rgba(0,0,0,0.1)', 
+          borderRadius: '50%', 
+          marginTop: 8,
+          filter: 'blur(2px)'
+        }}></div>
       </div>
 
+      {/* Character Mood Text */}
+      <div className="mt-4" style={{ 
+        fontSize: '0.75rem', 
+        fontStyle: 'italic', 
+        color: condition === 'thriving' ? 'var(--primary)' : 'var(--text-muted)',
+        fontWeight: condition === 'thriving' ? 700 : 400
+      }}>
+        {condition === 'thriving' ? "Feeling absolutely wonderful today! 🌟" : 
+         condition === 'recovering' ? "Getting stronger day by day..." : 
+         condition === 'sick' || condition === 'diseased' ? "I don't feel so good... please help." :
+         `"${characterProfile?.moodStyle}"`}
+      </div>
+      
     </div>
   );
 };

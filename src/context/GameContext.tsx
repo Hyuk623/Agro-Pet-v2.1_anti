@@ -29,7 +29,8 @@ const initialPlayer: PlayerState = {
   activeBuffs: { coldProtectionDays: 0 }
 };
 
-const initialCrop = (name: string): CropState => ({
+const initialCrop = (id: string, name: string): CropState => ({
+  id,
   name,
   day: 1,
   stage: 'sprout',
@@ -39,7 +40,8 @@ const initialCrop = (name: string): CropState => ({
   stamina: 80,
   stress: 0,
   diseaseRisk: 0,
-  growthProgress: 0
+  growthProgress: 0,
+  isRecovering: false
 });
 
 export const GameContext = createContext<GameContextProps | undefined>(undefined);
@@ -48,7 +50,7 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [state, setState] = useState<GameState>({
     hasStarted: false,
     currentPage: 'farm',
-    crop: initialCrop(''),
+    crop: initialCrop('strawberry', ''),
     player: initialPlayer,
     environment: generateEnvironment(1),
     actions: { water: 'normal', heat: 'normal', ventilation: 'normal', light: 'auto' },
@@ -64,7 +66,7 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     setState(prev => ({
       ...prev,
       hasStarted: true,
-      crop: initialCrop(name),
+      crop: initialCrop('strawberry', name),
       environment: generateEnvironment(1)
     }));
   };
@@ -198,26 +200,37 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
       const newActiveBuffs = { ...prev.player.activeBuffs };
       if (newActiveBuffs.coldProtectionDays > 0) newActiveBuffs.coldProtectionDays--;
 
+      // 4. Update Crop State with recovery detection
+      const isRecovering = 
+        (result.stateChanges.diseaseRisk !== undefined && result.stateChanges.diseaseRisk < 30 && prev.crop.diseaseRisk > 50) ||
+        (result.stateChanges.stamina !== undefined && result.stateChanges.stamina > 60 && prev.crop.stamina < 30);
+
+      const updatedCrop = {
+        ...prev.crop,
+        ...result.stateChanges,
+        day: prev.crop.day + 1,
+        stage: newStage,
+        growthProgress: growthP,
+        visualState: visualState,
+        isRecovering: isRecovering
+      };
+
       return {
         ...prev,
         checkpoints,
         minigameActive: false,
         minigameTokensEarnedToday: 0,
-        environment: generateEnvironment(prev.crop.day + 1),
+        environment: generateEnvironment(updatedCrop.day),
+        crop: updatedCrop,
+        dayFeedback: {
+          ...result.feedback,
+          tokensGained: tokensGained > 0 ? tokensGained : undefined
+        },
         player: { 
           ...prev.player, 
-          tokens: prev.player.tokens + tokensGained + 1, // Regular 1 token for surviving a day
-          activeBuffs: newActiveBuffs 
-        },
-        crop: {
-          ...prev.crop,
-          ...result.stateChanges,
-          day: prev.crop.day + 1,
-          growthProgress: growthP,
-          stage: newStage,
-          visualState
-        },
-        dayFeedback: { ...result.feedback, tokensGained: tokensGained + 1 }
+          tokens: prev.player.tokens + tokensGained + 1,
+          activeBuffs: newActiveBuffs
+        }
       };
     });
   };

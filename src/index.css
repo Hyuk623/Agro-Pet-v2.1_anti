@@ -186,3 +186,60 @@ input, button {
 .animate-float {
   animation: float 4s ease-in-out infinite;
 }
+
+@keyframes bounceSlow {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-15px) scale(1.05); }
+}
+.animate-bounce-slow {
+  animation: bounceSlow 3s ease-in-out infinite;
+}
+
+@keyframes wobble {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+  100% { transform: rotate(0deg); }
+}
+.animate-wobble {
+  animation: wobble 0.6s ease-in-out infinite;
+}
+
+@keyframes swaySlow {
+  0% { transform: translateX(-5px) rotate(-1deg); }
+  50% { transform: translateX(5px) rotate(1deg); }
+  100% { transform: translateX(-5px) rotate(-1deg); }
+}
+.animate-sway-slow {
+  animation: swaySlow 5s ease-in-out infinite;
+}
+
+@keyframes glowThriving {
+  0% { filter: drop-shadow(0 0 5px rgba(79, 209, 197, 0.4)); }
+  50% { filter: drop-shadow(0 0 20px rgba(79, 209, 197, 0.8)); }
+  100% { filter: drop-shadow(0 0 5px rgba(79, 209, 197, 0.4)); }
+}
+.glow-thriving {
+  animation: glowThriving 2s infinite;
+}
+
+@keyframes warningPulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; filter: brightness(1.2) drop-shadow(0 0 10px rgba(229, 62, 62, 0.5)); }
+  100% { opacity: 1; }
+}
+.warning-pulse {
+  animation: warningPulse 1s infinite;
+}
+
+.dull-overlay {
+  filter: saturate(0.4) brightness(0.9);
+}
+
+.sparkle::after {
+  content: '✨';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  animation: popIn 0.5s ease-out;
+}

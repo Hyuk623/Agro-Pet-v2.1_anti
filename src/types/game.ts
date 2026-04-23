@@ -2,7 +2,8 @@ export type GrowthStage = 'sprout' | 'growth' | 'flower' | 'fruit' | 'dead';
 export type VisualState = 'healthy' | 'stressed' | 'risky' | 'flowering' | 'fruiting' | 'dead';
 
 export interface CropState {
-  name: string;
+  id: string; // The crop type ID (e.g., 'strawberry')
+  name: string; // User-given name
   day: number;
   stage: GrowthStage;
   visualState: VisualState;
@@ -12,6 +13,7 @@ export interface CropState {
   stress: number;
   diseaseRisk: number;
   growthProgress: number;
+  isRecovering: boolean; // Flag to trigger recovery visuals
 }
 
 export type ActionLevel = 'low' | 'normal' | 'high';
@@ -111,4 +113,29 @@ export interface CropPack {
     isDead: boolean;
     deathDetails?: { main: string; secondary: string; lesson: string; actions: string };
   };
+}
+
+// --- Crop Character Visual System ---
+
+export type CropVisualStage = 'sprout' | 'growth' | 'flower' | 'fruit' | 'dead';
+export type CropVisualCondition = 'healthy' | 'thriving' | 'stressed' | 'sick' | 'diseased' | 'recovering' | 'dead';
+
+export interface CropCharacterProfile {
+  id: string; // 'strawberry', 'tomato', etc.
+  displayName: string;
+  personalityKeywords: string[];
+  moodStyle: string;
+  charmPoints: string[];
+  description: string;
+}
+
+export type CropVisualAssetMap = {
+  [stage in CropVisualStage]?: {
+    [condition in CropVisualCondition]?: string; // Path to image
+  } & { default: string };
+};
+
+export interface VisualRegistryEntry {
+  profile: CropCharacterProfile;
+  assets: CropVisualAssetMap;
 }
