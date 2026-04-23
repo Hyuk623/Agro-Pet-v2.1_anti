@@ -139,3 +139,16 @@ export interface VisualRegistryEntry {
   profile: CropCharacterProfile;
   assets: CropVisualAssetMap;
 }
+
+// --- AI Prompt System ---
+
+export interface CropPromptTemplate {
+  cropName: string;
+  concept: string;
+  visualPersonality: string;
+  facialExpressionStyle: string;
+  keyColors: string[];
+  globalStyleRules: string[];
+  stageNotes: Record<Exclude<CropVisualStage, 'dead'>, string>;
+  conditionNotes: Record<Exclude<CropVisualCondition, 'dead'>, string>;
+}

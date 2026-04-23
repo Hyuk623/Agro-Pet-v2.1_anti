@@ -1,0 +1,30 @@
+import { CropPromptTemplate } from '../../types/game';
+
+export const strawberryPrompt: CropPromptTemplate = {
+  cropName: "Strawberry",
+  concept: "Cute, bouncy berry child with a leaf-tuft hat",
+  visualPersonality: "Cheerful, highly expressive, bright aesthetics",
+  facialExpressionStyle: "Anime-style kawaii eyes, tiny mouth",
+  keyColors: ["#FF4B72 (Berry Pink)", "#4CAF50 (Leaf Green)", "#FEFCBF (Seed Yellow)"],
+  globalStyleRules: [
+    "2D flat vector style",
+    "Thick clean outlines",
+    "Vibrant sticker-like contrast",
+    "Transparent background",
+    "Consistent chibi proportions"
+  ],
+  stageNotes: {
+    sprout: "Just a tiny seed with a single green sprout cap, looking up curious",
+    growth: "Small green stems with tiny pink buds starting to show",
+    flower: "Large white flower crown, looking proud and elegant",
+    fruit: "Fully ripened bright pink berry body, round and chubby"
+  },
+  conditionNotes: {
+    thriving: "Sparkling aura, heart-shaped eyes, huge blush",
+    healthy: "Confident smile, upright posture, standard happy face",
+    stressed: "Single sweat drop, worried squiggly mouth, slightly wilted cap",
+    sick: "Pale desaturated colors, spiral eyes, drooping posture",
+    diseased: "Dark spots on face or body, crying eyes, visible sadness",
+    recovering: "Hopeful upward gaze, small bandage icon, subtle healing glint"
+  }
+};
