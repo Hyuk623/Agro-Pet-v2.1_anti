@@ -1,4 +1,4 @@
-import type { VisualRegistryEntry } from '../types/game';
+import type { VisualRegistryEntry, GrowthStage, VisualState } from '../types/game';
 
 export const cropVisualRegistry: Record<string, VisualRegistryEntry> = {
   strawberry: {
@@ -11,6 +11,10 @@ export const cropVisualRegistry: Record<string, VisualRegistryEntry> = {
       description: 'A cheerful strawberry that loves sunlight but gets thirsty easily.'
     },
     assets: {
+      seed: {
+        healthy: '/assets/crops/strawberry/seed.png',
+        default: '/assets/crops/strawberry/seed.png'
+      },
       sprout: {
         healthy: '/assets/crops/strawberry/sprout_healthy.png',
         stressed: '/assets/crops/strawberry/sprout_stressed.png',
@@ -50,11 +54,14 @@ export const cropVisualRegistry: Record<string, VisualRegistryEntry> = {
       description: 'A sturdy tomato that grows at its own pace.'
     },
     assets: {
+      seed: {
+        healthy: '/assets/crops/tomato/seed.png',
+        default: '/assets/crops/tomato/seed.png'
+      },
       sprout: {
         healthy: '/assets/crops/tomato/sprout_healthy.png',
         default: '/assets/crops/tomato/sprout_healthy.png'
       },
-      // Other stages partially wired for validation
       dead: {
         default: '/assets/crops/tomato/dead.png'
       }
@@ -67,8 +74,8 @@ export const cropVisualRegistry: Record<string, VisualRegistryEntry> = {
  */
 export function resolveCropVisual(
   cropId: string, 
-  stage: string, 
-  condition: string
+  stage: GrowthStage, 
+  condition: VisualState
 ): string {
   const cropEntry = cropVisualRegistry[cropId];
   if (!cropEntry) return '/assets/crops/fallback_placeholder.png';

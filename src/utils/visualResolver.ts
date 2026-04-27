@@ -67,6 +67,22 @@ export function getConditionFeedback(condition: CropVisualCondition) {
         animation: 'none',
         effect: 'warning-pulse'
       };
+    case 'wilted':
+      return { 
+        color: '#718096', 
+        animation: 'animate-sway', 
+        effect: 'sepia', 
+        desc: 'Collapsed and dehydrated.', 
+        mood: 'Miserable' 
+      };
+    case 'stalled':
+      return { 
+        color: '#A0AEC0', 
+        animation: '', 
+        effect: 'grayscale', 
+        desc: 'Growth has stopped due to poor conditions.', 
+        mood: 'Bored' 
+      };
     case 'dead':
       return {
         badge: '💀 DEAD',

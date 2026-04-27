@@ -34,7 +34,7 @@ const initialCrop = (id: string, name: string): CropState => ({
   id,
   name,
   day: 1,
-  stage: 'sprout',
+  stage: 'seed',
   visualState: 'healthy',
   waterLevel: 50,
   lightLevel: 50,
@@ -43,7 +43,11 @@ const initialCrop = (id: string, name: string): CropState => ({
   diseaseRisk: 0,
   growthProgress: 0,
   isRecovering: false,
-  interactionCount: 0
+  interactionCount: 0,
+  trait: (['cheerful', 'delicate', 'resilient', 'picky', 'calm'][Math.floor(Math.random() * 5)]) as any,
+  branch: 'standard',
+  careQualityHistory: [],
+  totalHealthScore: 100
 });
 
 export const GameContext = createContext<GameContextProps | undefined>(undefined);
@@ -298,7 +302,7 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   };
 
   return (
-    <GameContext.Provider value={{ state, startGame, updateAction, runDay, useItem, recoverFromCheckpoint, completeMinigame, closeFeedback, setCurrentPage, buyItem }}>
+    <GameContext.Provider value={{ state, startGame, updateAction, runDay, useItem, recoverFromCheckpoint, completeMinigame, closeFeedback, setCurrentPage, buyItem, interactWithCrop }}>
       {children}
     </GameContext.Provider>
   );

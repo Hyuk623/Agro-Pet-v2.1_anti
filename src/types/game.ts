@@ -1,5 +1,8 @@
-export type GrowthStage = 'sprout' | 'growth' | 'flower' | 'fruit' | 'dead';
-export type VisualState = 'healthy' | 'stressed' | 'risky' | 'flowering' | 'fruiting' | 'dead';
+export type GrowthStage = 'seed' | 'sprout' | 'growth' | 'flower' | 'fruit' | 'dead';
+export type VisualState = 'healthy' | 'thriving' | 'stressed' | 'sick' | 'diseased' | 'recovering' | 'wilted' | 'dead' | 'stalled';
+
+export type CropTrait = 'cheerful' | 'delicate' | 'resilient' | 'picky' | 'calm';
+export type GrowthBranch = 'optimal' | 'standard' | 'stunted' | 'distorted';
 
 export interface CropState {
   id: string; // The crop type ID (e.g., 'strawberry')
@@ -15,6 +18,10 @@ export interface CropState {
   growthProgress: number;
   isRecovering: boolean; // Flag to trigger recovery visuals
   interactionCount: number; // For Tamagotchi play
+  trait: CropTrait;
+  branch: GrowthBranch;
+  careQualityHistory: number[]; // Track daily care scores (0-100)
+  totalHealthScore: number;
 }
 
 export type ActionLevel = 'low' | 'normal' | 'high';
@@ -47,9 +54,9 @@ export interface PlayerState {
   inventory: {
     nutrients: number;
     coldProtectors: number;
-    fertilizer: number;    // NEW
-    pesticide: number;     // NEW
-    booster: number;       // NEW
+    fertilizer: number;
+    pesticide: number;
+    booster: number;
   };
   activeBuffs: {
     coldProtectionDays: number;
@@ -63,6 +70,15 @@ export interface Checkpoint {
   reason: 'major_danger' | 'stage_up';
 }
 
+export interface DayFeedback {
+  title: string;
+  desc: string;
+  isWarning: boolean;
+  tokensGained?: number;
+  lesson?: string; // Short educational tip
+  impact?: string; // What exactly changed in the crop
+}
+
 export interface GameState {
   hasStarted: boolean;
   currentPage: 'farm' | 'shop' | 'arcade';
@@ -72,7 +88,7 @@ export interface GameState {
   actions: DailyActions;
   checkpoints: Checkpoint[];
   deathReason: { main: string; secondary: string; lesson: string; actions: string } | null;
-  dayFeedback: { title: string; desc: string; isWarning: boolean; tokensGained?: number } | null;
+  dayFeedback: DayFeedback | null;
   minigameActive: boolean;
   minigameTokensEarnedToday: number;
   maxDailyMinigameTokens: number;
@@ -111,7 +127,7 @@ export interface CropPack {
   };
   evaluateDay: (env: Environment, actions: DailyActions, crop: CropState) => {
     stateChanges: Partial<CropState>;
-    feedback: { title: string; desc: string; isWarning: boolean };
+    feedback: DayFeedback;
     isDead: boolean;
     deathDetails?: { main: string; secondary: string; lesson: string; actions: string };
   };
@@ -119,8 +135,8 @@ export interface CropPack {
 
 // --- Crop Character Visual System ---
 
-export type CropVisualStage = 'sprout' | 'growth' | 'flower' | 'fruit' | 'dead';
-export type CropVisualCondition = 'healthy' | 'thriving' | 'stressed' | 'sick' | 'diseased' | 'recovering' | 'dead';
+export type CropVisualStage = GrowthStage;
+export type CropVisualCondition = VisualState;
 
 export interface CropCharacterProfile {
   id: string; // 'strawberry', 'tomato', etc.

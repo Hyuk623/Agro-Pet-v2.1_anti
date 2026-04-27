@@ -2,29 +2,31 @@ import type { CropPromptTemplate } from '../../types/game';
 
 export const tomatoPrompt: CropPromptTemplate = {
   cropName: "Tomato",
-  concept: "Round, sturdy, and slightly grumpy plump fellow",
-  visualPersonality: "Solid, calm, reliable but easily frustrated",
-  facialExpressionStyle: "Dotted eyes, grumpy flat mouth, star-shaped stem hair",
-  keyColors: ["#E53E3E (Deep Red)", "#2F855A (Stem Green)", "#C05621 (Earth Tone)"],
+  concept: "Round, bouncy tomato character with a leafy vine hat",
+  visualPersonality: "Energetic, determined, and very round",
+  facialExpressionStyle: "Round dot eyes, small active mouth",
+  keyColors: ["#FF5252 (Red)", "#4CAF50 (Green)", "#FFD740 (Yellow)"],
   globalStyleRules: [
     "2D flat vector style",
-    "Bold clean lines",
-    "Saturated solid colors",
-    "Character-centric silhouette",
-    "Clean white or transparent background"
+    "Thick clean outlines",
+    "Bouncy animation physics in spirit",
+    "Transparent background"
   ],
   stageNotes: {
-    sprout: "Solid green seedling, looks determined and tough",
-    growth: "Thick vine starting to curl, looking focused on climbing",
-    flower: "Small yellow star flowers forming a small crown",
-    fruit: "Big round red body, shiny skin, looking very proud"
+    seed: "A small yellow-white seed buried in rich brown soil.",
+    sprout: "Tiny green stem with two symmetrical leaves, very energetic",
+    growth: "Bigger vine-like structure with small green globes appearing",
+    flower: "Bright yellow star-shaped flowers hanging from the green vines",
+    fruit: "Large, shiny red tomato body, round and glistening"
   },
   conditionNotes: {
-    thriving: "Glowing red skin, high-five hand gesture (if applicable), shiny star stem",
-    healthy: "Solid neutral expression, tall and sturdy posture",
-    stressed: "Steam coming from head, furrowed brow, slightly redder (angry)",
-    sick: "Dark green/yellowish tint, looking dizzy, wilted stem",
-    diseased: "Black blight spots, coughing expression, extremely low energy",
-    recovering: "Wiping forehead, taking a deep breath, color returning to red"
+    thriving: "Glistening skin, super happy face, sparkling surrounding",
+    healthy: "Active smile, upright firm posture",
+    stressed: "Dull color, slightly sweating, vine hat drooping",
+    sick: "Slightly yellowish/pale, dizzy eyes, limp posture",
+    diseased: "Blight spots, very tired expression, almost greyish red",
+    recovering: "Returning shine, determined face, small medical cross stickers",
+    wilted: "Completely sagged vine, very dark red/grey, sad closing eyes.",
+    stalled: "Uninterested face, no movement, looking away."
   }
 };

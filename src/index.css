@@ -236,6 +236,24 @@ input, button {
   filter: saturate(0.4) brightness(0.9);
 }
 
+.sweat-drop::after {
+  content: '💧';
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 1.2rem;
+  animation: drop-fall 2s infinite;
+}
+
+@keyframes drop-fall {
+  0% { transform: translateY(0); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(40px); opacity: 0; }
+}
+
+.sepia { filter: sepia(0.8) saturate(0.5); }
+.grayscale { filter: grayscale(1); }
+
 .sparkle::after {
   content: '✨';
   position: absolute;

@@ -3,10 +3,11 @@ import { useGame } from '../context/GameContext';
 import { resolveCropVisual, cropVisualRegistry } from '../data/visualRegistry';
 import { determineVisualCondition, getConditionFeedback } from '../utils/visualResolver';
 import { getCropReaction, getMoodLabel } from '../utils/moodResolver';
+import { Sparkles, AlertCircle, TrendingUp, Info } from 'lucide-react';
 
 export const CropVisual: React.FC = () => {
   const { state } = useGame();
-  const { crop } = state;
+  const { crop, dayFeedback } = state;
   const [showHeart, setShowHeart] = React.useState(false);
 
   // Trigger heart animation on interactionCount change
@@ -19,7 +20,7 @@ export const CropVisual: React.FC = () => {
   }, [crop.interactionCount]);
 
   // 1. Resolve visual condition & mood
-  const condition = determineVisualCondition(crop);
+  const condition = (crop.visualState as any) || determineVisualCondition(crop);
   const reaction = getCropReaction(crop, condition);
   const moodLabel = getMoodLabel(condition);
   
@@ -28,9 +29,15 @@ export const CropVisual: React.FC = () => {
   const feedback = getConditionFeedback(condition);
   const characterProfile = cropVisualRegistry[crop.id]?.profile;
 
-  // Helper to determine if we should show the "Face Overlay"
-  // Usually shown for emojis or simple placeholders to give them 'character'
   const showFaceOverlay = condition !== 'dead';
+
+  // Branch colors
+  const branchColors = {
+    optimal: '#D69E2E',
+    standard: '#319795',
+    stunted: '#718096',
+    distorted: '#E53E3E'
+  };
 
   return (
     <div className="glass-panel text-center animate-pop" style={{ position: 'relative', overflow: 'visible', paddingTop: '30px' }}>
@@ -55,23 +62,36 @@ export const CropVisual: React.FC = () => {
             <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-main)', margin: 0, letterSpacing: '-0.5px' }}>
               {crop.name || characterProfile?.displayName}
             </h2>
-            <span style={{ fontSize: '0.75rem', background: 'rgba(79, 209, 197, 0.1)', padding: '3px 10px', borderRadius: '12px', color: '#319795', fontWeight: 700 }}>
-              {characterProfile?.displayName}
+            <span style={{ 
+              fontSize: '0.65rem', 
+              background: 'linear-gradient(135deg, #ECC94B, #D69E2E)', 
+              padding: '2px 8px', 
+              borderRadius: '8px', 
+              color: '#fff', 
+              fontWeight: 900,
+              textTransform: 'uppercase'
+            }}>
+              {crop.trait}
             </span>
          </div>
          <div className="flex gap-2 mt-2">
-            <span className="chip" style={{ background: feedback.color, color: '#fff', fontSize: '0.75rem', padding: '5px 12px', fontWeight: 800 }}>
+            <span className="chip" style={{ background: feedback.color, color: '#fff', fontSize: '0.7rem', padding: '4px 10px', fontWeight: 800 }}>
               {moodLabel.toUpperCase()}
             </span>
-            <span className="chip" style={{ background: 'white', border: '2px solid #E2E8F0', fontSize: '0.75rem', padding: '4px 12px', color: '#718096' }}>
+            <span className="chip" style={{ background: 'white', border: '2px solid #E2E8F0', fontSize: '0.7rem', padding: '3px 10px', color: '#718096' }}>
               DAY {crop.day} • {crop.stage.toUpperCase()}
             </span>
+            {crop.branch !== 'standard' && (
+              <span className="chip" style={{ background: branchColors[crop.branch], color: '#fff', fontSize: '0.7rem', padding: '4px 10px', fontWeight: 800 }}>
+                {crop.branch.toUpperCase()}
+              </span>
+            )}
          </div>
       </div>
 
-      {/* Visual Centerpiece Area - CHARACTER ZONE */}
+      {/* Visual Centerpiece Area */}
       <div className={`${feedback.animation} ${feedback.effect} sparkle-container`} style={{ 
-          height: 220, 
+          height: 200, 
           display: 'flex', 
           flexDirection: 'column',
           alignItems: 'center', 
@@ -82,31 +102,16 @@ export const CropVisual: React.FC = () => {
           position: 'relative',
           borderRadius: '24px'
       }}>
-        {/* Recovery Sparkle */}
-        {condition === 'recovering' && (
-          <div className="sparkle" style={{ position: 'absolute', top: '15%', right: '15%' }}></div>
-        )}
-
-        {/* --- CHARACTER FACE LAYER (Tamagotchi Style) --- */}
+        {crop.branch === 'optimal' && <div className="sparkle" style={{ position: 'absolute', top: 10, right: 10 }}></div>}
+        
         {showFaceOverlay && (
           <div className="char-face">
-            {/* Eyes */}
             <div className="char-eyes">
-              <div className="char-eye" style={{ 
-                height: condition === 'thriving' ? '12px' : '8px',
-                background: condition === 'sick' ? '#718096' : '#333'
-              }}></div>
-              <div className="char-eye" style={{ 
-                height: condition === 'thriving' ? '12px' : '8px',
-                background: condition === 'sick' ? '#718096' : '#333'
-              }}></div>
+              <div className="char-eye" style={{ height: condition === 'thriving' ? '12px' : '8px', background: '#333' }}></div>
+              <div className="char-eye" style={{ height: condition === 'thriving' ? '12px' : '8px', background: '#333' }}></div>
             </div>
-            {/* Mouth */}
-            <div className={`char-mouth ${condition === 'stressed' || condition === 'sick' ? 'surprised' : ''}`} style={{
-               borderColor: condition === 'sick' ? '#718096' : '#333'
-            }}></div>
-            {/* Blush (Only if healthy/thriving) */}
-            {(condition === 'healthy' || condition === 'thriving') && (
+            <div className={`char-mouth ${condition === 'wilted' || condition === 'stressed' ? 'surprised' : ''}`}></div>
+            {(condition === 'healthy' || condition === 'thriving' || condition === 'recovering') && (
               <div className="char-blush">
                 <div className="blush-dot"></div>
                 <div className="blush-dot"></div>
@@ -115,53 +120,67 @@ export const CropVisual: React.FC = () => {
           </div>
         )}
 
-        {/* Character Image / Base Body */}
-        <img 
-          src={assetPath} 
-          alt={`${crop.id} ${condition}`}
-          style={{ 
-            maxHeight: '160px', 
-            maxWidth: '160px', 
-            objectFit: 'contain', 
-            transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            transformOrigin: 'bottom center',
-            filter: condition === 'sick' || condition === 'diseased' ? 'saturate(0.5)' : 'none'
-          }}
-          onError={(e) => {
-            (e.target as any).style.display = 'none';
-            (e.target as any).nextSibling.style.display = 'block';
-          }}
-        />
-        {/* Fallback Emoji */}
-        <div style={{ display: 'none', fontSize: '6rem', lineHeight: 1, filter: condition === 'dead' ? 'grayscale(1)' : 'none' }}>
-           {crop.stage === 'fruit' ? '🍓' : '🌱'}
-        </div>
-
-        {/* Dynamic Character Shadow */}
-        <div style={{ 
-          width: '80px', 
-          height: '10px', 
-          background: 'rgba(0,0,0,0.06)', 
-          borderRadius: '50%', 
-          marginTop: 12,
-          filter: 'blur(4px)'
-        }}></div>
+        <img src={assetPath} alt="crop" style={{ maxHeight: '140px', maxWidth: '140px', objectFit: 'contain' }} />
+        
+        <div style={{ width: '80px', height: '10px', background: 'rgba(0,0,0,0.06)', borderRadius: '50%', marginTop: 8, filter: 'blur(4px)' }}></div>
       </div>
 
-      {/* Character Profile Footer */}
-      <div className="mt-5 flex justify-between items-end" style={{ padding: '0 15px' }}>
-        <div style={{ textAlign: 'left' }}>
-           <div style={{ fontSize: '0.7rem', color: '#A0AEC0', fontWeight: 700, marginBottom: 4, letterSpacing: '0.5px' }}>PE-TRAIT</div>
-           <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 4 }}>
-             ✨ {characterProfile?.charmPoints[0]}
+      {/* Today's Insight (Tamagotchi Lesson Integration) */}
+      {dayFeedback && dayFeedback.impact && (
+        <div className="glass-panel" style={{ margin: '15px 10px 5px 10px', padding: '12px', background: 'rgba(255,255,255,0.9)', border: '1px solid #E2E8F0', textAlign: 'left' }}>
+           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <TrendingUp size={14} color="#319795" />
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2D3748' }}>Growth Impact</span>
            </div>
+           <p style={{ fontSize: '0.75rem', color: '#4A5568', margin: 0 }}>{dayFeedback.impact}</p>
+           
+           {dayFeedback.lesson && (
+             <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed #CBD5E0', display: 'flex', gap: 6 }}>
+               <Info size={14} color="#A0AEC0" />
+               <p style={{ fontSize: '0.65rem', color: '#718096', fontStyle: 'italic', margin: 0 }}>{dayFeedback.lesson}</p>
+             </div>
+           )}
         </div>
-        <div style={{ textAlign: 'right' }}>
-           <div style={{ fontSize: '0.7rem', color: '#A0AEC0', fontWeight: 700, marginBottom: 4, letterSpacing: '0.5px' }}>PERSONALITY</div>
-           <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-             {characterProfile?.personalityKeywords[0]} Buddy
-           </div>
+      )}
+
+      {/* Crisis Warning Card - HIGHEST VISIBILITY */}
+      {(crop.stress > 60 || crop.diseaseRisk > 60 || crop.stamina < 30) && (
+        <div className="animate-pulse" style={{ 
+          margin: '10px', 
+          background: '#FFF5F5', 
+          border: '2px solid #FEB2B2', 
+          borderRadius: '12px', 
+          padding: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10
+        }}>
+          <AlertCircle color="#E53E3E" size={24} />
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 900, color: '#C53030' }}>CRITICAL CARE REQUIRED</div>
+            <div style={{ fontSize: '0.7rem', color: '#E53E3E' }}>
+              {crop.stress > 60 && "Extreme stress detected. "}
+              {crop.diseaseRisk > 60 && "Fungal risk is very high. "}
+              {crop.stamina < 30 && "Energy is dangerously low."}
+            </div>
+          </div>
         </div>
+      )}
+
+      {/* Care History (Tamagotchi Hearts/Dots) */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginTop: 10, marginBottom: 10 }}>
+         {crop.careQualityHistory.slice(-7).map((score, i) => (
+           <div key={i} style={{ 
+             width: 8, 
+             height: 8, 
+             borderRadius: '50%', 
+             background: score > 80 ? '#48BB78' : score > 50 ? '#F6E05E' : '#F56565',
+             boxShadow: score > 80 ? '0 0 5px rgba(72, 187, 120, 0.5)' : 'none'
+           }} title={`Score: ${score}`} />
+         ))}
+         {[...Array(Math.max(0, 7 - crop.careQualityHistory.length))].map((_, i) => (
+           <div key={`empty-${i}`} style={{ width: 8, height: 8, borderRadius: '50%', background: '#E2E8F0' }} />
+         ))}
       </div>
       
     </div>
