@@ -2,9 +2,9 @@ import type { CropPromptTemplate } from '../../types/game';
 
 export const strawberryPrompt: CropPromptTemplate = {
   cropName: "Strawberry",
-  concept: "Cute, bouncy berry child with a leaf-tuft hat",
-  visualPersonality: "Cheerful, highly expressive, bright aesthetics",
-  facialExpressionStyle: "Anime-style kawaii eyes, tiny mouth",
+  concept: "Adorable sentient strawberry spirit with distinct expressive face",
+  visualPersonality: "Tamagotchi-style charm, innocent and highly reactive",
+  facialExpressionStyle: "Clear expressive eyes (black dots or shiny manga eyes), a cute tiny mouth, and rosy blush stickers",
   keyColors: ["#FF4B72 (Berry Pink)", "#4CAF50 (Leaf Green)", "#FEFCBF (Seed Yellow)"],
   globalStyleRules: [
     "2D flat vector style",

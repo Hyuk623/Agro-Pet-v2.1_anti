@@ -14,6 +14,7 @@ export interface CropState {
   diseaseRisk: number;
   growthProgress: number;
   isRecovering: boolean; // Flag to trigger recovery visuals
+  interactionCount: number; // For Tamagotchi play
 }
 
 export type ActionLevel = 'low' | 'normal' | 'high';
@@ -24,6 +25,7 @@ export interface DailyActions {
   heat: ActionLevel;
   ventilation: ActionLevel;
   light: SwitchAction;
+  play: boolean; // Played with today
 }
 
 export interface Environment {

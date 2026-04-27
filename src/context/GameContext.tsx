@@ -15,6 +15,7 @@ interface GameContextProps {
   closeFeedback: () => void;
   setCurrentPage: (page: 'farm' | 'shop' | 'arcade') => void;
   buyItem: (itemType: ItemType, price: number) => void;
+  interactWithCrop: () => void;
 }
 
 const initialPlayer: PlayerState = {
@@ -41,7 +42,8 @@ const initialCrop = (id: string, name: string): CropState => ({
   stress: 0,
   diseaseRisk: 0,
   growthProgress: 0,
-  isRecovering: false
+  isRecovering: false,
+  interactionCount: 0
 });
 
 export const GameContext = createContext<GameContextProps | undefined>(undefined);
@@ -53,7 +55,7 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     crop: initialCrop('strawberry', ''),
     player: initialPlayer,
     environment: generateEnvironment(1),
-    actions: { water: 'normal', heat: 'normal', ventilation: 'normal', light: 'auto' },
+    actions: { water: 'normal', heat: 'normal', ventilation: 'normal', light: 'auto', play: false },
     checkpoints: [],
     deathReason: null,
     dayFeedback: null,
@@ -149,6 +151,21 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     });
   };
 
+  const interactWithCrop = () => {
+    setState(prev => ({
+      ...prev,
+      crop: {
+        ...prev.crop,
+        stress: Math.max(0, prev.crop.stress - 5),
+        interactionCount: prev.crop.interactionCount + 1
+      },
+      actions: {
+        ...prev.actions,
+        play: true
+      }
+    }));
+  };
+
   const runDay = () => {
     setState(prev => {
       // 1. Snapshot for checkpoint (Safe Day)
@@ -222,6 +239,11 @@ export const GameProvider: React.FC<{children: ReactNode}> = ({ children }) => {
         minigameTokensEarnedToday: 0,
         environment: generateEnvironment(updatedCrop.day),
         crop: updatedCrop,
+        actions: { 
+          ...prev.actions, 
+          water: prev.actions.water, // reset logic could go here
+          play: false 
+        },
         dayFeedback: {
           ...result.feedback,
           tokensGained: tokensGained > 0 ? tokensGained : undefined

@@ -3,7 +3,7 @@ import { useGame } from '../context/GameContext';
 import { Droplet, Thermometer, Wind, Sun, Beaker, Shield, Bug, Flower2, Zap } from 'lucide-react';
 
 export const ActionControls: React.FC = () => {
-  const { state, updateAction, runDay, useItem } = useGame();
+  const { state, updateAction, runDay, useItem, interactWithCrop } = useGame();
   const { actions, player } = state;
 
   const controlCards = [
@@ -126,6 +126,36 @@ export const ActionControls: React.FC = () => {
                 </span>
              </button>
            ))}
+        </div>
+      </div>
+
+      {/* Daily Interaction Section (Tamagotchi Style) */}
+      <div className="glass-panel" style={{ margin: '14px 0', border: '2px dashed #FED7E2' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+             <h4 style={{ fontSize: '0.9rem', color: '#D53F8C', margin: 0, fontWeight: 800 }}>Play with {state.crop.name || 'Buddy'}</h4>
+             <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Boosts mood & reduces stress</p>
+          </div>
+          <button 
+            className={`btn ${actions.play ? 'btn-secondary' : 'btn-primary'}`}
+            style={{ 
+              background: actions.play ? '#EDF2F7' : '#F687B3', 
+              color: actions.play ? '#A0AEC0' : '#fff',
+              padding: '10px 20px',
+              borderRadius: '12px',
+              border: 'none',
+              transform: 'scale(1)',
+              transition: 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+            }}
+            onClick={() => {
+              if (typeof interactWithCrop === 'function') {
+                interactWithCrop();
+              }
+            }}
+          >
+            <Zap size={14} style={{ marginRight: 6 }} />
+            {actions.play ? 'Played!' : 'Play!'}
+          </button>
         </div>
       </div>
 
