@@ -1,13 +1,59 @@
 export type GrowthStage = 'seed' | 'sprout' | 'growth' | 'flower' | 'fruit' | 'dead';
 export type VisualState = 'healthy' | 'thriving' | 'stressed' | 'sick' | 'diseased' | 'recovering' | 'wilted' | 'dead' | 'stalled';
-
 export type CropTrait = 'cheerful' | 'delicate' | 'resilient' | 'picky' | 'calm';
 export type GrowthBranch = 'optimal' | 'standard' | 'stunted' | 'distorted';
+export type NeglectSeverity = 'none' | 'mild' | 'moderate' | 'severe' | 'critical';
+
+export interface GuestProfile {
+  guestId: string;
+  createdAt: number;
+  lastSeenAt: number;
+  lastProcessedAt: number;
+}
+
+/**
+ * Educational cause tagging — every stat change carries a reason.
+ * This is the core of the layered time model.
+ */
+export type CauseTag =
+  | 'passive_neglect'   // Happened because player was away (real-world time)
+  | 'active_care'       // Happened because of player's care decisions (session)
+  | 'event_driven'      // Happened because of an environmental event
+  | 'trait_effect'      // Happened because of the crop's personality trait
+  | 'recovery'          // Positive change from recovery action
+  | 'natural';          // Normal background process (disease pressure etc.)
+
+/** One traceable stat change with its cause */
+export interface StatChange {
+  stat: 'waterLevel' | 'stress' | 'stamina' | 'diseaseRisk' | 'growthProgress' | 'neglectLevel';
+  delta: number;        // positive = increase, negative = decrease
+  cause: CauseTag;
+  label: string;        // Human-readable Korean, e.g. "물 부족으로 수분 감소"
+}
+
+/** Report shown when player returns after real-world absence */
+export interface WhileAwayReport {
+  hoursAway: number;
+  severity: NeglectSeverity;
+  changes: StatChange[];
+  headline: string;     // e.g. "12시간 동안 자리를 비웠어요"
+  advice: string;       // e.g. "물을 우선 보충해주세요"
+}
+
+/** Report for what happened during an active care session */
+export interface SessionResultReport {
+  careQuality: number;  // 0–100
+  branch: GrowthBranch;
+  changes: StatChange[];
+  headline: string;
+  lesson?: string;
+  growthGained: number;
+}
 
 export interface CropState {
-  id: string; // The crop type ID (e.g., 'strawberry')
-  name: string; // User-given name
-  day: number;
+  id: string;
+  name: string;
+  day: number;                  // Session count (care sessions completed)
   stage: GrowthStage;
   visualState: VisualState;
   waterLevel: number;
@@ -16,12 +62,17 @@ export interface CropState {
   stress: number;
   diseaseRisk: number;
   growthProgress: number;
-  isRecovering: boolean; // Flag to trigger recovery visuals
-  interactionCount: number; // For Tamagotchi play
+  isRecovering: boolean;
+  interactionCount: number;
   trait: CropTrait;
   branch: GrowthBranch;
-  careQualityHistory: number[]; // Track daily care scores (0-100)
+  careQualityHistory: number[];
   totalHealthScore: number;
+  lastSessionTime: number;       // Unix ms: last care session completed
+  lastOpenedAt: number;          // Unix ms: last time app was opened
+  neglectSensitivity: number;    // 0.1–2.0 multiplier
+  neglectLevel: number;          // 0–100: accumulated neglect (passive)
+  awayHours: number;             // How many hours player was away before last return
 }
 
 export type ActionLevel = 'low' | 'normal' | 'high';
@@ -32,7 +83,7 @@ export interface DailyActions {
   heat: ActionLevel;
   ventilation: ActionLevel;
   light: SwitchAction;
-  play: boolean; // Played with today
+  play: boolean;
 }
 
 export interface Environment {
@@ -44,6 +95,7 @@ export interface Environment {
     title: string;
     type: 'danger' | 'bonus' | 'neutral';
     description: string;
+    durationDays?: number;
   };
 }
 
@@ -75,11 +127,21 @@ export interface DayFeedback {
   desc: string;
   isWarning: boolean;
   tokensGained?: number;
-  lesson?: string; // Short educational tip
-  impact?: string; // What exactly changed in the crop
+  /** Structured neglect report (layered time layer 1) */
+  whileAwayReport?: WhileAwayReport;
+  /** Structured session report (layered time layer 2) */
+  sessionResult?: SessionResultReport;
+  // Legacy convenience strings (kept for backward compat)
+  neglectReport?: string;
+  neglectSeverity?: NeglectSeverity;
+  hoursAway?: number;
+  lesson?: string;
+  impact?: string;
+  sessionReport?: string;
 }
 
 export interface GameState {
+  guestProfile: GuestProfile;
   hasStarted: boolean;
   currentPage: 'farm' | 'shop' | 'arcade';
   crop: CropState;
@@ -87,11 +149,18 @@ export interface GameState {
   environment: Environment;
   actions: DailyActions;
   checkpoints: Checkpoint[];
-  deathReason: { main: string; secondary: string; lesson: string; actions: string } | null;
+  deathReason: {
+    main: string;
+    secondary: string;
+    lesson: string;
+    actions: string;
+    neglectContribution?: string;
+  } | null;
   dayFeedback: DayFeedback | null;
   minigameActive: boolean;
   minigameTokensEarnedToday: number;
   maxDailyMinigameTokens: number;
+  diary: string[];
 }
 
 export interface StageRequirement {
@@ -99,47 +168,57 @@ export interface StageRequirement {
   growthThreshold: number;
 }
 
-export interface EffectsMap {
-  waterLevelChange: number;
-  stressChange: number;
-  diseaseChange: number;
-  staminaChange: number;
-}
-
+/**
+ * CropPack is now DATA-FIRST.
+ * Simulation logic lives in sessionEngine.ts, not here.
+ * Future crops vary by swapping this config object.
+ */
 export interface CropPack {
   id: string;
   name: string;
   themeColor: string;
-  baseStats: {
-    water: number;
-    light: number;
-    stamina: number;
-  };
+  baseStats: { water: number; light: number; stamina: number };
   stages: Record<Exclude<GrowthStage, 'dead'>, StageRequirement>;
   preferences: {
     optimalTemp: [number, number];
     optimalWater: [number, number];
+    optimalLight: number;
   };
   deathConditions: {
     maxStress: number;
     maxDisease: number;
     minStamina: number;
   };
-  evaluateDay: (env: Environment, actions: DailyActions, crop: CropState) => {
-    stateChanges: Partial<CropState>;
-    feedback: DayFeedback;
-    isDead: boolean;
-    deathDetails?: { main: string; secondary: string; lesson: string; actions: string };
+  neglectConfig: {
+    safeWindowHours: number;
+    waterDecayPerHour: number;
+    stressRisePerHour: number;
+    staminaDecayPerHour: number;
   };
+  sessionConfig: {
+    baseGrowthPerSession: number;
+    optimalGrowthBonus: number;
+    stuntedGrowthPenalty: number;
+    optimalCareThreshold: number;  // careQuality >= this → optimal branch
+    stuntedCareThreshold: number;  // careQuality < this → stunted branch
+  };
+  recoveryConfig: {
+    neglectDecayOnGoodCare: number; // How much neglectLevel drops per good session
+  };
+  traitModifiers: Record<CropTrait, {
+    tempSensitivity: number;
+    waterSensitivity: number;
+    neglectSensitivity: number;
+    recoverySpeed: number;
+  }>;
 }
 
-// --- Crop Character Visual System ---
-
+// ─── Visual / AI Prompt Types (unchanged) ────────────────────────────────────
 export type CropVisualStage = GrowthStage;
 export type CropVisualCondition = VisualState;
 
 export interface CropCharacterProfile {
-  id: string; // 'strawberry', 'tomato', etc.
+  id: string;
   displayName: string;
   personalityKeywords: string[];
   moodStyle: string;
@@ -149,7 +228,7 @@ export interface CropCharacterProfile {
 
 export type CropVisualAssetMap = {
   [stage in CropVisualStage]?: {
-    [condition in CropVisualCondition]?: string; // Path to image
+    [condition in CropVisualCondition]?: string;
   } & { default: string };
 };
 
@@ -157,8 +236,6 @@ export interface VisualRegistryEntry {
   profile: CropCharacterProfile;
   assets: CropVisualAssetMap;
 }
-
-// --- AI Prompt System ---
 
 export interface CropPromptTemplate {
   cropName: string;

@@ -59,7 +59,42 @@
 - **정서적 학습 피드백:** 단순 수치 노출이 아닌, 시뮬레이션 결과에 따른 구체적인 '영향(Impact)'과 '교훈(Lesson)'을 말풍선과 결과 창에 통합하여 자연스러운 학습 경험 제공.
 - **다마고치식 히스토리:** 최근 7일간의 관리 점수를 하트/도트 형태로 시각화하여 사용자가 자신의 관리 패턴을 직관적으로 파악 가능하게 개선.
 
+### [레이어드 하이브리드 시간 모델 리팩토링 (Layered Hybrid Time Model Refactoring)]
+
+**핵심 변경 사항:** 단순 턴제 "버튼 누르면 하루"에서 3레이어 하이브리드 시간 모델로 전환.
+
+#### 아키텍처 변경 (Architecture Changes)
+| 이전 구조 | 새 구조 | 역할 |
+|-----------|---------|------|
+| `evaluateDay()` in strawberryPack | `sessionEngine.ts` | Layer 2: 세션 시뮬레이션 |
+| `calculateNeglect()` in timeEngine | `timeEngine.ts` (개선) | Layer 1: 실시간 방치 처리 |
+| `environmentGen.ts` (day-based) | `eventEngine.ts` (state-based) | Layer 3: 상황 기반 이벤트 |
+| `strawberryPack.ts` (로직 포함) | `strawberryPack.ts` (데이터 전용) | 작물 설정 데이터 |
+
+#### CauseTag 교육 시스템
+모든 스탯 변화에 원인 태그 부여:
+- `passive_neglect` → 방치 중 발생 (빨강)
+- `active_care` → 플레이어 케어 결정 (파랑)
+- `event_driven` → 환경/이벤트 원인 (노랑)
+- `recovery` → 회복 행동 (초록)
+
+#### 새 UI 기능
+- **WhileAwayReport**: 돌아왔을 때 경과 시간·변화 목록·조언 표시
+- **방치 수준(neglectLevel)**: StatusPanel에 별도 게이지로 항상 표시
+- **작물 황변 효과**: neglectLevel이 높아질수록 DynamicCropArt가 노랗게 변색
+- **접이식 원인 목록**: 피드백 모달에서 각 변화의 원인을 펼쳐서 확인 가능
+- **사망 원인 분석**: 직접 원인 + 방치 기여도 분리 표시
+
+#### 설계 원칙
+- 방치 페널티는 공평함: 8시간 이하는 페널티 없음
+- 방치 단독으로는 즉시 사망 불가 (누적 + 잘못된 케어의 조합으로만 사망)
+- 미래 작물 확장: CropPack 데이터만 추가하면 엔진 재작성 불필요
+
+#### 제거된 파일
+- `src/data/environmentGen.ts` → `src/utils/eventEngine.ts`로 대체
+
 ## 3. 이후 계획 (Future Roadmap)
 - [ ] 실제 유저 데이터 저장을 위한 Firebase Auth 및 Firestore 연동.
 - [ ] **성능 최적화 및 에셋 고도화:** AI 프롬프트 기반의 실제 고화질 캐릭터 이미지 리소스 교체.
 - [ ] 추가 작물(감자, 토마토 등) 확장 팩 개발.
+- [ ] `neglectLevel` 기반의 장기 방치 특수 이벤트 (재배 포기 방어 경고 시스템).

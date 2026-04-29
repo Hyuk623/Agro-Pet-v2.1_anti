@@ -1,9 +1,11 @@
 import React from 'react';
 import { useGame } from '../context/GameContext';
 import { resolveCropVisual, cropVisualRegistry } from '../data/visualRegistry';
+import { strawberryPack } from '../data/strawberryPack';
 import { determineVisualCondition, getConditionFeedback } from '../utils/visualResolver';
 import { getCropReaction, getMoodLabel } from '../utils/moodResolver';
 import { Sparkles, AlertCircle, TrendingUp, Info } from 'lucide-react';
+import { DynamicCropArt } from './DynamicCropArt';
 
 export const CropVisual: React.FC = () => {
   const { state } = useGame();
@@ -24,12 +26,8 @@ export const CropVisual: React.FC = () => {
   const reaction = getCropReaction(crop, condition);
   const moodLabel = getMoodLabel(condition);
   
-  // 2. Resolve visual asset and feedback meta
-  const assetPath = resolveCropVisual(crop.id, crop.stage, condition);
   const feedback = getConditionFeedback(condition);
   const characterProfile = cropVisualRegistry[crop.id]?.profile;
-
-  const showFaceOverlay = condition !== 'dead';
 
   // Branch colors
   const branchColors = {
@@ -104,35 +102,40 @@ export const CropVisual: React.FC = () => {
       }}>
         {crop.branch === 'optimal' && <div className="sparkle" style={{ position: 'absolute', top: 10, right: 10 }}></div>}
         
-        {showFaceOverlay && (
-          <div className="char-face">
-            <div className="char-eyes">
-              <div className="char-eye" style={{ height: condition === 'thriving' ? '12px' : '8px', background: '#333' }}></div>
-              <div className="char-eye" style={{ height: condition === 'thriving' ? '12px' : '8px', background: '#333' }}></div>
-            </div>
-            <div className={`char-mouth ${condition === 'wilted' || condition === 'stressed' ? 'surprised' : ''}`}></div>
-            {(condition === 'healthy' || condition === 'thriving' || condition === 'recovering') && (
-              <div className="char-blush">
-                <div className="blush-dot"></div>
-                <div className="blush-dot"></div>
-              </div>
-            )}
-          </div>
-        )}
+        <DynamicCropArt
+          stage={crop.stage}
+          condition={condition}
+          color={strawberryPack.themeColor}
+          neglectLevel={crop.neglectLevel}
+        />
 
-        <img src={assetPath} alt="crop" style={{ maxHeight: '140px', maxWidth: '140px', objectFit: 'contain' }} />
-        
-        <div style={{ width: '80px', height: '10px', background: 'rgba(0,0,0,0.06)', borderRadius: '50%', marginTop: 8, filter: 'blur(4px)' }}></div>
+        <div style={{ width: '80px', height: '10px', background: 'rgba(0,0,0,0.06)', borderRadius: '50%', marginTop: 8, filter: 'blur(4px)', transition: 'width 0.5s ease' }}></div>
+      </div>
+
+      {/* Evolution Progress Gauge (Tamagotchi Style) */}
+      <div style={{ margin: '15px 15px 0 15px' }}>
+         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', fontWeight: 800, color: '#A0AEC0', marginBottom: 4 }}>
+            <span>EVOLUTION GOAL</span>
+            <span>{Math.round(crop.growthProgress)}%</span>
+         </div>
+         <div style={{ height: 6, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{ 
+              width: `${crop.growthProgress}%`, 
+              height: '100%', 
+              background: 'linear-gradient(to right, #48BB78, #38A169)',
+              transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)'
+            }} />
+         </div>
       </div>
 
       {/* Today's Insight (Tamagotchi Lesson Integration) */}
-      {dayFeedback && dayFeedback.impact && (
+      {dayFeedback && (dayFeedback.impact || dayFeedback.sessionReport) && (
         <div className="glass-panel" style={{ margin: '15px 10px 5px 10px', padding: '12px', background: 'rgba(255,255,255,0.9)', border: '1px solid #E2E8F0', textAlign: 'left' }}>
            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <TrendingUp size={14} color="#319795" />
               <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2D3748' }}>Growth Impact</span>
            </div>
-           <p style={{ fontSize: '0.75rem', color: '#4A5568', margin: 0 }}>{dayFeedback.impact}</p>
+           <p style={{ fontSize: '0.75rem', color: '#4A5568', margin: 0 }}>{dayFeedback.sessionReport || dayFeedback.impact}</p>
            
            {dayFeedback.lesson && (
              <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed #CBD5E0', display: 'flex', gap: 6 }}>
